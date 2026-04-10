@@ -27,7 +27,7 @@ TRADE_MARKET = "US"
 TOTAL_CAPITAL = 10000.0
 
 # 最小交易金额（美元），低于此金额不跟单
-MIN_TRADE_AMOUNT = 100.0
+MIN_TRADE_AMOUNT = 0
 
 # 权重变化阈值，低于此值视为股价波动忽略，0.02 = 2%
 WEIGHT_CHANGE_THRESHOLD = 0.02

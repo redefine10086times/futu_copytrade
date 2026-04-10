@@ -82,10 +82,15 @@ def _is_tradable_hours():
     夜盘 20:00-4:00 ET 不自动交易，只发邮件通知。
     """
     now = datetime.now(ET)
-    if now.weekday() >= 5:
+    wd = now.weekday()
+    hour = now.hour
+    if wd == 5:                    # 周六全天
         return False
-    minutes = now.hour * 60 + now.minute
-    return 4 * 60 <= minutes < 20 * 60
+    if wd == 4 and hour >= 20:     # 周五 20:00 后
+        return False
+    if wd == 6 and hour < 16:      # 周日 16:00 前
+        return False
+    return True
 
 def _is_premarket_hours():
     """判断当前是否为盘前时段 4:00-9:30 ET
@@ -337,7 +342,7 @@ class Trader:
         else:
             order_type = OrderType.NORMAL
             if side == TrdSide.BUY:
-                order_price = round(price * (1 + LIMIT_SLIPPAGE), 2)
+                order_price = round(price * (1 - LIMIT_SLIPPAGE), 2)
             else:
                 order_price = round(price * (1 - LIMIT_SLIPPAGE), 2)
             order_desc = "限价单 @%s" % order_price
@@ -368,10 +373,11 @@ class Trader:
         if price is None:
             return False
 
-        total_slippage = LIMIT_SLIPPAGE + REPRICE_SLIPPAGE * reprice_count
         if side == TrdSide.BUY:
+            total_slippage = -LIMIT_SLIPPAGE + REPRICE_SLIPPAGE * reprice_count
             new_price = round(price * (1 + total_slippage), 2)
         else:
+            total_slippage = LIMIT_SLIPPAGE + REPRICE_SLIPPAGE * reprice_count
             new_price = round(price * (1 - total_slippage), 2)
 
         logger.info("改价 order_id=%s -> @%s (第%d次)", order_id, new_price, reprice_count)
